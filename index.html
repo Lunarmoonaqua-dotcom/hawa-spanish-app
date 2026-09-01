@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#F791A9" />
+  <meta name="description" content="HAWA — Complete Step-by-Step Spanish Learning Course with Interactive Practice, Games, and Voice Narration" />
+  <title>HAWA — Spanish Step-by-Step</title>
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+
+  <!-- App Header with Touch-Friendly Stats & Teacher Avatar -->
+  <header class="hawa-header">
+    <div class="brand">
+      <div class="teacher-avatar-sm" id="header-avatar-slot" aria-label="Black Female Teacher Coach"></div>
+      <div class="brand-text">
+        <span class="brand-name">HAWA</span>
+        <span class="device-sync-tag">📱 Saved on this device</span>
+      </div>
+    </div>
+    
+    <div class="header-controls">
+      <!-- Voice Audio Toggle Button -->
+      <button class="audio-toggle-btn active" id="btn-audio-toggle" aria-label="Toggle Voice Audio">
+        🔊 <span id="audio-status-text">Voice ON</span>
+      </button>
+
+      <!-- Stats Display -->
+      <div class="hawa-stats">
+        <div class="stat-pill streak" title="Daily Streak">🔥 <span id="hawa-streak">0</span></div>
+        <div class="stat-pill xp" title="Total XP">✨ <span id="hawa-xp">0</span> XP</div>
+        <div class="stat-pill lvl" title="User Level">🛡️ Lvl <span id="hawa-lvl">1</span></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Track Pathway Selector (Easy vs. Advanced) -->
+  <div class="track-switcher">
+    <button class="track-btn active" id="track-easy" onclick="window.switchTrack('easy')">
+      🌱 Easy Spanish (15 Chapters)
+    </button>
+    <button class="track-btn" id="track-advanced" onclick="window.switchTrack('advanced')">
+      🚀 Advanced Spanish (15 Chapters)
+    </button>
+  </div>
+
+  <!-- Primary Navigation -->
+  <nav class="hawa-nav" aria-label="Main Navigation">
+    <button class="nav-tab active" id="tab-chapters">📚 Course Chapters</button>
+    <button class="nav-tab" id="tab-charts">📊 Conjugation Charts</button>
+    <button class="nav-tab" id="tab-library">📖 Verb Library</button>
+    <button class="nav-tab" id="tab-notebook">📓 Mistake Notebook (<span id="hawa-mistake-count">0</span>)</button>
+    <button class="nav-tab" id="tab-diagnostic">🩺 Placement Test</button>
+  </nav>
+
+  <!-- Main Dynamic View Container -->
+  <main class="hawa-container" id="hawa-main-view" role="main">
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Cargando lecciones de HAWA...</p>
+    </div>
+  </main>
+
+  <!-- Chapter Interactive Modal (Overview / Practice / Review Game / Exam) -->
+  <div id="hawa-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-meta">
+          <span id="modal-chapter-tag" class="unit-tag">Chapter</span>
+          <h3 id="modal-chapter-title" class="modal-title">Title</h3>
+        </div>
+        <button class="modal-close" id="btn-close-modal" aria-label="Close Modal">✕</button>
+      </div>
+      
+      <!-- Modal Navigation Bar -->
+      <div class="modal-modes">
+        <button id="btn-mode-overview" class="mode-btn active">1. Overview</button>
+        <button id="btn-mode-practice" class="mode-btn">2. Learn & Practice</button>
+        <button id="btn-mode-game" class="mode-btn">3. Review Game</button>
+        <button id="btn-mode-exam" class="mode-btn">4. Exam</button>
+      </div>
+
+      <div id="modal-content-area" class="modal-body"></div>
+      <div id="modal-footer-area" class="modal-footer"></div>
+    </div>
+  </div>
+
+  <!-- Dedicated Conjugation Game Modal -->
+  <div id="conj-game-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-meta">
+          <span class="unit-tag tag-game">Conjugation Game</span>
+          <h3 id="conj-game-modal-title" class="modal-title">Verb Drill</h3>
+        </div>
+        <button class="modal-close" id="btn-close-conj-modal" aria-label="Close Game Modal">✕</button>
+      </div>
+      <div id="conj-modal-content" class="modal-body"></div>
+      <div id="conj-modal-footer" class="modal-footer"></div>
+    </div>
+  </div>
+
+  <!-- Cloud Sync / Device Transfer Modal -->
+  <div id="sync-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">📱 Device Sync & Backup</h3>
+        <button class="modal-close" id="btn-close-sync-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.92rem; color:var(--text-muted); margin-bottom:14px; line-height:1.5;">
+          Your XP, streaks, and completed chapters are safely saved in your current browser. To transfer your progress to another phone, tablet, or laptop, export your backup code below.
+        </p>
+        <label style="font-size:0.8rem; font-weight:800; display:block; margin-bottom:6px;">Your Progress Export Code:</label>
+        <textarea id="sync-export-code" class="text-input-field" style="height:80px; font-size:0.75rem;" readonly></textarea>
+        <button class="btn-submit" id="btn-copy-sync" style="margin-bottom:20px;">📋 Copy Export Code</button>
+
+        <hr style="border:none; border-top:1px solid var(--border-color); margin:16px 0;">
+
+        <label style="font-size:0.8rem; font-weight:800; display:block; margin-bottom:6px;">Import Progress on this Device:</label>
+        <textarea id="sync-import-code" class="text-input-field" placeholder="Paste your progress code here..." style="height:80px; font-size:0.75rem;"></textarea>
+        <button class="btn-secondary" id="btn-apply-sync" style="width:100%;">📥 Import & Restore Progress</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Mascot Message Toast -->
+  <div id="hawa-mascot" class="mascot-toast hidden" aria-live="polite">
+    <div class="mascot-bubble-avatar" id="mascot-toast-avatar"></div>
+    <div class="mascot-bubble-text" id="hawa-mascot-msg">¡Hola! Let's master Spanish step by step!</div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="hawa-footer">
+    <button class="footer-link" id="btn-sync-open">🔄 Transfer / Sync Progress</button>
+    <button class="footer-link" id="btn-help">ℹ️ How to Use HAWA</button>
+    <button class="footer-link danger" id="btn-reset">⚠️ Reset Local Progress</button>
+  </footer>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
